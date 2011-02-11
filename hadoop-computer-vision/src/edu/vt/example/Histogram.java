@@ -1,0 +1,75 @@
+package edu.vt.example;
+
+import java.io.IOException;
+import java.util.Iterator;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.ByteWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
+
+import edu.vt.input.Image;
+import edu.vt.input.ImageInputFormat;
+
+public class Histogram extends Configured implements Tool {
+	public static class Map extends
+			Mapper<LongWritable, Image, ByteWritable, LongWritable> {
+		private final static LongWritable one = new LongWritable(1);
+		private ByteWritable ImgByte = new ByteWritable();
+
+		public void map(LongWritable key, Image value, Context context)
+				throws IOException, InterruptedException {
+			// TODO:Create bin counts
+			context.write(ImgByte, one);
+		}
+	}
+
+	public static class Reduce extends
+			Reducer<ByteWritable, LongWritable, ByteWritable, LongWritable> {
+		public void reduce(ByteWritable key, Iterator<LongWritable> values,
+				Context context) throws IOException, InterruptedException {
+			long sum = 0;
+			while (values.hasNext()) {
+				sum += values.next().get();
+			}
+			context.write(key, new LongWritable(sum));
+		}
+	}
+
+	public int run(String[] args) throws Exception {
+		Job job = new Job(getConf());
+		job.setJarByClass(Histogram.class);
+
+		// Specify various job-specific parameters 
+		job.setJobName("Histogram");
+
+		job.setOutputKeyClass(ByteWritable.class);
+		job.setOutputValueClass(LongWritable.class);
+
+		job.setMapperClass(Map.class);
+		job.setCombinerClass(Reduce.class);
+		job.setReducerClass(Reduce.class);
+
+		job.setInputFormatClass(ImageInputFormat.class);
+		job.setOutputFormatClass(TextOutputFormat.class);
+
+		FileInputFormat.addInputPath(job, new Path(args[0]));
+		FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+		return job.waitForCompletion(true) ? 0 : 1;
+	}
+	
+	public static void main(String[] args) throws Exception {
+		int res = ToolRunner.run(new Configuration(), new Histogram(), args);
+		System.exit(res);
+	}
+}
