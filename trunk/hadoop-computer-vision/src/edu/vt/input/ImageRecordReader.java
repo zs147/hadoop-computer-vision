@@ -10,6 +10,9 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
+import static com.googlecode.javacv.jna.cxcore.v21.*;
+import static com.googlecode.javacv.jna.highgui.v21.*;
+
 public class ImageRecordReader extends RecordReader<LongWritable, Image>{
 
 	private static final Log LOG = LogFactory.getLog(ImageRecordReader.class);
@@ -49,7 +52,23 @@ public class ImageRecordReader extends RecordReader<LongWritable, Image>{
 
 	@Override
 	public boolean nextKeyValue() throws IOException, InterruptedException {
-
+		// load image
+		IplImage img1 = null;
+		
+		// Calculate new ROI
+		
+		// sets the Region of Interest
+		cvSetImageROI(img1, cvRect(10, 15, 150, 250));
+		
+		// create destination image
+		IplImage img2 = cvCreateImage(cvGetSize(img1), img1.depth, img1.nChannels);
+		
+		// copy sub-image
+		cvCopy(img1, img2, null);
+		
+		// reset the Region of Interest
+		cvResetImageROI(img1);
+		
 		return false;
 	}
 
