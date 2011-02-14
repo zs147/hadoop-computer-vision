@@ -5,5 +5,7 @@
 	<classpathentry kind="lib" path="lib/hadoop-common-0.21.0.jar"/>
 	<classpathentry kind="lib" path="lib/hadoop-mapred-0.21.0.jar"/>
 	<classpathentry kind="lib" path="lib/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="lib" path="lib/jna-3.2.4.jar"/>
+	<classpathentry kind="lib" path="lib/javacv-bin/javacv.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
