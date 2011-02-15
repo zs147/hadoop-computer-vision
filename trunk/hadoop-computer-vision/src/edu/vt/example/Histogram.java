@@ -17,6 +17,9 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import static com.googlecode.javacv.jna.cxcore.v21.*;
+import static com.googlecode.javacv.jna.cv.v21.*;
+
 import edu.vt.input.Image;
 import edu.vt.input.ImageInputFormat;
 
@@ -24,12 +27,20 @@ public class Histogram extends Configured implements Tool {
 	public static class Map extends
 			Mapper<LongWritable, Image, ByteWritable, LongWritable> {
 		private final static LongWritable one = new LongWritable(1);
-		private ByteWritable ImgByte = new ByteWritable();
 
 		public void map(LongWritable key, Image value, Context context)
 				throws IOException, InterruptedException {
-			// TODO:Create bin counts
-			context.write(ImgByte, one);
+			
+			// Convert to gray scale image
+			IplImage im1 = value.getImage();
+			IplImage im2 = cvCreateImage(cvSize(im1.width,im1.height), IPL_DEPTH_8U, 1);
+			cvCvtColor(im1, im2, CV_BGR2GRAY);
+			
+			// Compute histogram
+			byte [] bytes = im2.imageData.getByteArray(0, im2.imageSize);
+			for(int i = 0; i < bytes.length; i++){
+				context.write(new ByteWritable(bytes[i]), one);
+			}
 		}
 	}
 
