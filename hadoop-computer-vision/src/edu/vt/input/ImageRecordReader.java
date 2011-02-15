@@ -5,19 +5,26 @@ import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 import static com.googlecode.javacv.jna.cxcore.v21.*;
+import static com.googlecode.javacv.jna.highgui.cvLoadImage;
 import static com.googlecode.javacv.jna.highgui.v21.*;
 
 public class ImageRecordReader extends RecordReader<LongWritable, Image>{
 
 	private static final Log LOG = LogFactory.getLog(ImageRecordReader.class);
 	
+	private float status;
+	private LongWritable key = null;
 	private Image value = null;
+	private String fileName = null;
 	
 	@Override
 	public void close() throws IOException {
@@ -28,30 +35,33 @@ public class ImageRecordReader extends RecordReader<LongWritable, Image>{
 	public LongWritable getCurrentKey() throws IOException,
 			InterruptedException {
 
-		return null;
+		return key;
 	}
 
 	@Override
 	public Image getCurrentValue() throws IOException, InterruptedException {
 
-		return null;
+		return value;
 	}
 
 	@Override
 	public float getProgress() throws IOException, InterruptedException {
 
-		return 0;
+		return status;
 	}
 
 	@Override
 	public void initialize(InputSplit genericSplit, TaskAttemptContext context)
 			throws IOException, InterruptedException {
+		FileSplit split = (FileSplit) genericSplit;
 
+		fileName = split.getPath().toString();
 		
 	}
 
 	@Override
 	public boolean nextKeyValue() throws IOException, InterruptedException {
+		/*
 		// load image
 		IplImage img1 = null;
 		
@@ -68,6 +78,16 @@ public class ImageRecordReader extends RecordReader<LongWritable, Image>{
 		
 		// reset the Region of Interest
 		cvResetImageROI(img1);
+		*/
+		
+		if(status != 100){
+		
+			key = new LongWritable(0);
+			value = new Image(cvLoadImage(fileName, 1));
+			
+			status = 100;
+			return true;
+		}
 		
 		return false;
 	}

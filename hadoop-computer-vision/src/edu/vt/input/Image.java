@@ -7,14 +7,12 @@ import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.apache.hadoop.io.BinaryComparable;
-import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableUtils;
 
 import static com.googlecode.javacv.jna.cxcore.v21.*;
 
-public class Image extends BinaryComparable implements
-		WritableComparable<BinaryComparable> {
+public class Image implements Writable {
 
 	private static final Log LOG = LogFactory.getLog(Image.class);
 
@@ -24,6 +22,10 @@ public class Image extends BinaryComparable implements
 	// Create Image from IplImage
 	public Image(IplImage image){
 		this.image = image;
+	}
+	
+	public IplImage getImage(){
+		return image;
 	}
 	
 	// Pixel depth in bits
@@ -58,13 +60,8 @@ public class Image extends BinaryComparable implements
 		return image.widthStep;
 	}
 	
-	@Override
-	public byte[] getBytes() {
-		return image.getByteBuffer().array();
-	}
-
-	@Override
-	public int getLength() {
+	// Image data size in bytes.
+	public int getImageSize() {
 		return image.imageSize;
 	}
 
@@ -76,10 +73,13 @@ public class Image extends BinaryComparable implements
 		int depth = WritableUtils.readVInt(in);
 		int nChannels = WritableUtils.readVInt(in);
 		int imageSize = WritableUtils.readVInt(in);
-		//in.readFully(bytes, 0, imageSize);
+		
+		byte [] bytes = new byte[imageSize];
+		in.readFully(bytes, 0, imageSize);
 		
 		// Recreate the image
 		image = cvCreateImage(cvSize(width, height), depth, nChannels);
+		image.imageData.write(0, bytes, 0, imageSize);
 	}
 
 	@Override
@@ -89,7 +89,9 @@ public class Image extends BinaryComparable implements
 		WritableUtils.writeVInt(out, image.depth);
 		WritableUtils.writeVInt(out, image.nChannels);
 		WritableUtils.writeVInt(out, image.imageSize);
-		out.write(getBytes(), 0, image.imageSize);
+		
+		byte [] bytes = image.imageData.getByteArray(0, getImageSize());
+		out.write(bytes, 0, image.imageSize);
 	}
 
 }
