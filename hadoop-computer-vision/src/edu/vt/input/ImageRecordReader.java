@@ -8,6 +8,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
@@ -17,12 +18,12 @@ import static com.googlecode.javacv.jna.cxcore.v21.*;
 import static com.googlecode.javacv.jna.highgui.cvLoadImage;
 import static com.googlecode.javacv.jna.highgui.v21.*;
 
-public class ImageRecordReader extends RecordReader<LongWritable, Image>{
+public class ImageRecordReader extends RecordReader<Text, Image>{
 
 	private static final Log LOG = LogFactory.getLog(ImageRecordReader.class);
 	
 	private float status;
-	private LongWritable key = null;
+	private Text key = null;
 	private Image value = null;
 	private String fileName = null;
 	
@@ -32,7 +33,7 @@ public class ImageRecordReader extends RecordReader<LongWritable, Image>{
 	}
 
 	@Override
-	public LongWritable getCurrentKey() throws IOException,
+	public Text getCurrentKey() throws IOException,
 			InterruptedException {
 
 		return key;
@@ -82,7 +83,7 @@ public class ImageRecordReader extends RecordReader<LongWritable, Image>{
 		
 		if(status != 100){
 		
-			key = new LongWritable(0);
+			key = new Text(fileName);
 			value = new Image(cvLoadImage(fileName, 1));
 			
 			status = 100;

@@ -8,6 +8,7 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.ByteWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -25,10 +26,10 @@ import edu.vt.input.ImageInputFormat;
 
 public class Histogram extends Configured implements Tool {
 	public static class Map extends
-			Mapper<LongWritable, Image, ByteWritable, LongWritable> {
+			Mapper<Text, Image, Text, LongWritable> {
 		private final static LongWritable one = new LongWritable(1);
 
-		public void map(LongWritable key, Image value, Context context)
+		public void map(Text key, Image value, Context context)
 				throws IOException, InterruptedException {
 			
 			// Convert to gray scale image
@@ -39,14 +40,14 @@ public class Histogram extends Configured implements Tool {
 			// Compute histogram
 			byte [] bytes = im2.imageData.getByteArray(0, im2.imageSize);
 			for(int i = 0; i < bytes.length; i++){
-				context.write(new ByteWritable(bytes[i]), one);
+				context.write(key, one);
 			}
 		}
 	}
 
 	public static class Reduce extends
-			Reducer<ByteWritable, LongWritable, ByteWritable, LongWritable> {
-		public void reduce(ByteWritable key, Iterator<LongWritable> values,
+			Reducer<Text, LongWritable, Text, LongWritable> {
+		public void reduce(Text key, Iterator<LongWritable> values,
 				Context context) throws IOException, InterruptedException {
 			long sum = 0;
 			while (values.hasNext()) {
@@ -63,7 +64,7 @@ public class Histogram extends Configured implements Tool {
 		// Specify various job-specific parameters 
 		job.setJobName("Histogram");
 
-		job.setOutputKeyClass(ByteWritable.class);
+		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(LongWritable.class);
 
 		job.setMapperClass(Map.class);
