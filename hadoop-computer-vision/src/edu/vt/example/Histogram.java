@@ -94,7 +94,7 @@ public class Histogram extends Configured implements Tool {
 		job.setOutputValueClass(LongArrayWritable.class);
 
 		job.setMapperClass(Map.class);
-		//job.setCombinerClass(Reduce.class);
+		job.setCombinerClass(Reduce.class);
 		job.setReducerClass(Reduce.class);
 
 		job.setInputFormatClass(ImageInputFormat.class);
