@@ -7,12 +7,15 @@ import org.apache.commons.logging.LogFactory;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+
+import edu.vt.io.Image;
 
 import static com.googlecode.javacv.jna.cxcore.v21.*;
 import static com.googlecode.javacv.jna.highgui.v21.*;
@@ -53,12 +56,13 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 	public void initialize(InputSplit genericSplit, TaskAttemptContext context)
 			throws IOException, InterruptedException {
 		FileSplit split = (FileSplit) genericSplit;
-		//Configuration job = context.getConfiguration();
-		//Path file = split.getPath();
-		//FileSystem fs = file.getFileSystem(job);
-		//Path path = fs.makeQualified(file);
-		fileName = split.getPath().toString();
+		Configuration job = context.getConfiguration();
+		Path file = split.getPath();
+		FileSystem fs = file.getFileSystem(job);
 
+		if(fs instanceof LocalFileSystem){
+			fileName = ((LocalFileSystem) fs).pathToFile(file).getAbsolutePath();
+		}
 	}
 
 	@Override
@@ -79,10 +83,10 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 		 * // reset the Region of Interest cvResetImageROI(img1);
 		 */
 
-		if (status != 100) {
+		if (status != 100 && fileName != null) {
 
 			key = new Text(fileName);
-			value = new Image(cvLoadImage(fileName.replace("file:", ""), 1));
+			value = new Image(cvLoadImage(fileName, 1));
 
 			status = 100;
 			return true;
