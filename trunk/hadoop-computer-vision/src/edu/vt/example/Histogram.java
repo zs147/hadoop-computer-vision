@@ -21,7 +21,7 @@ import org.apache.hadoop.util.ToolRunner;
 import static com.googlecode.javacv.jna.cxcore.v21.*;
 import static com.googlecode.javacv.jna.cv.v21.*;
 
-import edu.vt.input.Image;
+import edu.vt.io.Image;
 import edu.vt.input.ImageInputFormat;
 
 public class Histogram extends Configured implements Tool {
@@ -29,6 +29,7 @@ public class Histogram extends Configured implements Tool {
 			Mapper<Text, Image, Text, LongWritable> {
 		private final static LongWritable one = new LongWritable(1);
 
+		@Override
 		public void map(Text key, Image value, Context context)
 				throws IOException, InterruptedException {
 			
@@ -47,11 +48,15 @@ public class Histogram extends Configured implements Tool {
 
 	public static class Reduce extends
 			Reducer<Text, LongWritable, Text, LongWritable> {
-		public void reduce(Text key, Iterator<LongWritable> values,
+		
+		@Override
+		public void reduce(Text key, Iterable<LongWritable> values,
 				Context context) throws IOException, InterruptedException {
 			long sum = 0;
-			while (values.hasNext()) {
-				sum += values.next().get();
+			
+			Iterator<LongWritable> it = values.iterator();
+			while (it.hasNext()) {
+				sum += it.next().get();
 			}
 			context.write(key, new LongWritable(sum));
 		}
@@ -68,7 +73,7 @@ public class Histogram extends Configured implements Tool {
 		job.setOutputValueClass(LongWritable.class);
 
 		job.setMapperClass(Map.class);
-		//job.setCombinerClass(Reduce.class);
+		job.setCombinerClass(Reduce.class);
 		job.setReducerClass(Reduce.class);
 
 		job.setInputFormatClass(ImageInputFormat.class);

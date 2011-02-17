@@ -9,6 +9,8 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 
+import edu.vt.io.Image;
+
 public class ImageInputFormat extends FileInputFormat<Text, Image> {
 
 	@Override

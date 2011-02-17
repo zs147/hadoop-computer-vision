@@ -1,4 +1,4 @@
-package edu.vt.input;
+package edu.vt.io;
 
 import java.io.DataInput;
 import java.io.DataOutput;
