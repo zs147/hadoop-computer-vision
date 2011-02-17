@@ -11,4 +11,14 @@ public class LongArrayWritable extends ArrayWritable {
 	public LongArrayWritable(LongWritable[] values) {
 		super(LongWritable.class, values);
 	}
+	
+	public String toString(){
+		String [] strings = toStrings();
+		String str = "(" + strings.length + ")[";
+		for (int i = 0; i < strings.length; i++) {
+			str +=  strings[i] + " ";
+		}
+		str += "]";
+		return str;
+	}
 }
