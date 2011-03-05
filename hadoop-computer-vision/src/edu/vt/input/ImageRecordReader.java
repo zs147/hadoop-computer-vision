@@ -29,6 +29,14 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 	private Image value = null;
 	private String fileName = null;
 
+	// Configuration parameters
+	// By default use percentage for splitting
+	boolean windowByPixel = false;
+	int windowOverlapPercent = 0;
+	int windowSizePercent = 0;
+	int windowOverlapPixel = 0;
+	int windowSizePixel = 0;
+	
 	@Override
 	public void close() throws IOException {
 
@@ -63,6 +71,15 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 		if(fs instanceof LocalFileSystem){
 			fileName = ((LocalFileSystem) fs).pathToFile(file).getAbsolutePath();
 		}
+		
+		// Read configuration parameters
+		windowOverlapPercent = job.getInt("mapreduce.imagerecordreader.windowoverlappercent", 0);
+		windowSizePercent = job.getInt("mapreduce.imagerecordreader.windowsizepercent", 100);
+		
+		windowOverlapPixel = job.getInt("mapreduce.imagerecordreader.windowoverlappixel", 0);
+		windowSizePixel = job.getInt("mapreduce.imagerecordreader.windowsizepixel", Integer.MAX_VALUE);
+		
+		windowByPixel = job.getBoolean("mapreduce.imagerecordreader.windowbypixel", false);
 	}
 
 	@Override
