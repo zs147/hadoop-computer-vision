@@ -17,15 +17,33 @@ public class Image implements Writable {
 	private static final Log LOG = LogFactory.getLog(Image.class);
 
 	// IPL image
-	IplImage image = null;
+	private IplImage image = null;
+	private IplROI window = null;
 	
 	// Create Image from IplImage
 	public Image(IplImage image){
 		this.image = image;
+		this.window = null;
+	}
+
+	// Create Image from IplImage and IplROI
+	public Image(IplImage image, IplROI window){
+		this.image = image;
+		this.window = window;
 	}
 	
 	public IplImage getImage(){
 		return image;
+	}
+	
+	// get window where image came from
+	public IplROI getWindow(){
+		return window;
+	}
+	
+	// set window image came from
+	public void setWindow(IplROI window){
+		this.window = window;
 	}
 	
 	// Pixel depth in bits
