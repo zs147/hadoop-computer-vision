@@ -25,17 +25,22 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 	private static final Log LOG = LogFactory.getLog(ImageRecordReader.class);
 
 	private float status;
+	
+	// Image information
+	private String fileName = null;
+	private Image image = null;
+	
+	// Key/Value pair
 	private Text key = null;
 	private Image value = null;
-	private String fileName = null;
 
 	// Configuration parameters
 	// By default use percentage for splitting
-	boolean windowByPixel = false;
-	int windowOverlapPercent = 0;
-	int windowSizePercent = 0;
-	int windowOverlapPixel = 0;
-	int windowSizePixel = 0;
+	boolean byPixel = false;
+	float overlapPercent = 0;
+	float sizePercent = 0;
+	int overlapPixel = 0;
+	int sizePixel = 0;
 	
 	@Override
 	public void close() throws IOException {
@@ -68,42 +73,49 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 		Path file = split.getPath();
 		FileSystem fs = file.getFileSystem(job);
 
+		// Can only read from local file system
 		if(fs instanceof LocalFileSystem){
 			fileName = ((LocalFileSystem) fs).pathToFile(file).getAbsolutePath();
 		}
 		
 		// Read configuration parameters
-		windowOverlapPercent = job.getInt("mapreduce.imagerecordreader.windowoverlappercent", 0);
-		windowSizePercent = job.getInt("mapreduce.imagerecordreader.windowsizepercent", 100);
+		overlapPercent = job.getFloat("mapreduce.imagerecordreader.windowoverlappercent", 0);
+		sizePercent = job.getFloat("mapreduce.imagerecordreader.windowsizepercent", 100);
+		overlapPixel = job.getInt("mapreduce.imagerecordreader.windowoverlappixel", 0);
+		sizePixel = job.getInt("mapreduce.imagerecordreader.windowsizepixel", Integer.MAX_VALUE);
+		byPixel = job.getBoolean("mapreduce.imagerecordreader.windowbypixel", false);
 		
-		windowOverlapPixel = job.getInt("mapreduce.imagerecordreader.windowoverlappixel", 0);
-		windowSizePixel = job.getInt("mapreduce.imagerecordreader.windowsizepixel", Integer.MAX_VALUE);
-		
-		windowByPixel = job.getBoolean("mapreduce.imagerecordreader.windowbypixel", false);
+		// Open the file
+		image = new Image(cvLoadImage(fileName, 1));
 	}
 
 	@Override
 	public boolean nextKeyValue() throws IOException, InterruptedException {
 		/*
-		 * // load image IplImage img1 = null;
-		 * 
-		 * // Calculate new ROI
-		 * 
-		 * // sets the Region of Interest cvSetImageROI(img1, cvRect(10, 15,
-		 * 150, 250));
-		 * 
-		 * // create destination image IplImage img2 =
-		 * cvCreateImage(cvGetSize(img1), img1.depth, img1.nChannels);
-		 * 
-		 * // copy sub-image cvCopy(img1, img2, null);
-		 * 
-		 * // reset the Region of Interest cvResetImageROI(img1);
-		 */
+		// Calculate new ROI
+		CvRect window = getWindow();
+		 
+		// sets the ROI
+		IplImage img1 = image.getImage();
+		cvSetImageROI(img1, window.byValue());
+		 
+		// create destination image 
+		IplImage img2 = cvCreateImage(cvGetSize(img1), img1.depth, img1.nChannels);
+		 
+		// copy sub-image
+		cvCopy(img1, img2, null);
+		 
+		// reset the ROI
+		cvResetImageROI(img1);
+		
+		key = new Text(fileName);
+		value = new Image(img2, new WindowInfo(img1.width, img.height, window.x, window.y));
+		*/
 
 		if (status != 100 && fileName != null) {
 
 			key = new Text(fileName);
-			value = new Image(cvLoadImage(fileName, 1));
+			value = image;
 
 			status = 100;
 			return true;
@@ -111,5 +123,22 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 
 		return false;
 	}
-
+	
+	private CvRect getWindow(){
+		if(byPixel){
+			return getWindowByPixel();
+		}else{
+			return getWindowByPct();
+		}
+	}
+	
+	private CvRect getWindowByPct(){
+		int width = Math.round(image.getWidth() * overlapPercent);
+		int height = Math.round(image.getHeight() * overlapPercent);
+		return new CvRect();
+	}
+	
+	private CvRect getWindowByPixel(){
+		return new CvRect();
+	}
 }

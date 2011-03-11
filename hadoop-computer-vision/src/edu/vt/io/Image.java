@@ -18,7 +18,7 @@ public class Image implements Writable {
 
 	// IPL image
 	private IplImage image = null;
-	private IplROI window = null;
+	private WindowInfo window = null;
 	
 	// Create Image from IplImage
 	public Image(IplImage image){
@@ -27,7 +27,7 @@ public class Image implements Writable {
 	}
 
 	// Create Image from IplImage and IplROI
-	public Image(IplImage image, IplROI window){
+	public Image(IplImage image, WindowInfo window){
 		this.image = image;
 		this.window = window;
 	}
@@ -37,12 +37,12 @@ public class Image implements Writable {
 	}
 	
 	// get window where image came from
-	public IplROI getWindow(){
+	public WindowInfo getWindow(){
 		return window;
 	}
 	
 	// set window image came from
-	public void setWindow(IplROI window){
+	public void setWindow(WindowInfo window){
 		this.window = window;
 	}
 	
