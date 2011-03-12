@@ -6,8 +6,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -15,10 +15,12 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
+import com.googlecode.javacpp.BytePointer;
+
 import edu.vt.io.Image;
 
-import static com.googlecode.javacv.jna.cxcore.v21.*;
-import static com.googlecode.javacv.jna.highgui.v21.*;
+import static com.googlecode.javacv.cpp.opencv_core.*;
+import static com.googlecode.javacv.cpp.opencv_highgui.*;
 
 public class ImageRecordReader extends RecordReader<Text, Image> {
 
@@ -68,15 +70,9 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 	@Override
 	public void initialize(InputSplit genericSplit, TaskAttemptContext context)
 			throws IOException, InterruptedException {
+		// Get file split
 		FileSplit split = (FileSplit) genericSplit;
 		Configuration job = context.getConfiguration();
-		Path file = split.getPath();
-		FileSystem fs = file.getFileSystem(job);
-
-		// Can only read from local file system
-		if(fs instanceof LocalFileSystem){
-			fileName = ((LocalFileSystem) fs).pathToFile(file).getAbsolutePath();
-		}
 		
 		// Read configuration parameters
 		overlapPercent = job.getFloat("mapreduce.imagerecordreader.windowoverlappercent", 0);
@@ -86,7 +82,17 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 		byPixel = job.getBoolean("mapreduce.imagerecordreader.windowbypixel", false);
 		
 		// Open the file
-		image = new Image(cvLoadImage(fileName, 1));
+		Path file = split.getPath();
+		FileSystem fs = file.getFileSystem(job);
+		FSDataInputStream fileIn = fs.open(split.getPath());
+		
+		// Read file and decode image
+		byte [] b = new byte[fileIn.available()];
+		fileIn.readFully(b);
+		image = new Image(cvDecodeImage(cvMat(1, b.length, CV_8UC1, new BytePointer(b)))); 
+		
+		// Get filename to use as key
+		fileName = split.getPath().toString();
 	}
 
 	@Override

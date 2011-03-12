@@ -15,10 +15,10 @@ For the list of prerequisites and more detailed installation guide, please, see 
 
 The procedure at glance: 
 ------------------------
-1. tar -xjf OpenCV-2.1.0.tar.bz2 
+1. tar -xjf OpenCV-2.2.0.tar.bz2 
 2. mkdir opencv.build 
 3. cd opencv.build 
-4. cmake ../OpenCV-2.1.0
+4. cmake ../OpenCV-2.2.0
 5. make -j 2 
 6. sudo make install 
 7. sudo ldconfig 

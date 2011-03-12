@@ -10,7 +10,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableUtils;
 
-import static com.googlecode.javacv.jna.cxcore.v21.*;
+import com.googlecode.javacpp.BytePointer;
+
+import static com.googlecode.javacv.cpp.opencv_core.*;
 
 public class Image implements Writable {
 
@@ -55,32 +57,32 @@ public class Image implements Writable {
 	// IPL_DEPTH_32F - Single-precision floating point
 	// IPL_DEPTH_64F - Double-precision floating point
 	public int getDepth(){
-		return image.depth;
+		return image.depth();
 	}
 	
 	// Number of channels.
 	public int getNumChannel(){
-		return image.nChannels;
+		return image.nChannels();
 	}
 	
 	// Image height in pixels
 	public int getHeight(){
-		return image.height;
+		return image.height();
 	}
 	
 	// Image width in pixels
 	public int getWidth(){
-		return image.width;
+		return image.width();
 	}
 	
 	// The size of an aligned image row, in bytes
 	public int getWidthStep(){
-		return image.widthStep;
+		return image.widthStep();
 	}
 	
 	// Image data size in bytes.
 	public int getImageSize() {
-		return image.imageSize;
+		return image.imageSize();
 	}
 
 	@Override
@@ -97,19 +99,19 @@ public class Image implements Writable {
 		
 		// Recreate the image
 		image = cvCreateImage(cvSize(width, height), depth, nChannels);
-		image.imageData.write(0, bytes, 0, imageSize);
+		image.imageData(new BytePointer(bytes));
 	}
 
 	@Override
 	public void write(DataOutput out) throws IOException {
-		WritableUtils.writeVInt(out, image.height);
-		WritableUtils.writeVInt(out, image.width);
-		WritableUtils.writeVInt(out, image.depth);
-		WritableUtils.writeVInt(out, image.nChannels);
-		WritableUtils.writeVInt(out, image.imageSize);
+		WritableUtils.writeVInt(out, image.height());
+		WritableUtils.writeVInt(out, image.width());
+		WritableUtils.writeVInt(out, image.depth());
+		WritableUtils.writeVInt(out, image.nChannels());
+		WritableUtils.writeVInt(out, image.imageSize());
 		
-		byte [] bytes = image.imageData.getByteArray(0, getImageSize());
-		out.write(bytes, 0, image.imageSize);
+		byte [] bytes = image.imageData().getStringBytes();
+		out.write(bytes, 0, image.imageSize());
 	}
 
 }

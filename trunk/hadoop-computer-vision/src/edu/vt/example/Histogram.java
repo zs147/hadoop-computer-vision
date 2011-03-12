@@ -19,8 +19,8 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import static com.googlecode.javacv.jna.cxcore.v21.*;
-import static com.googlecode.javacv.jna.cv.v21.*;
+import static com.googlecode.javacv.cpp.opencv_core.*;
+import static com.googlecode.javacv.cpp.opencv_imgproc.*;
 
 import edu.vt.io.Image;
 import edu.vt.io.LongArrayWritable;
@@ -37,7 +37,7 @@ public class Histogram extends Configured implements Tool {
 			
 			// Convert to gray scale image
 			IplImage im1 = value.getImage();
-			IplImage im2 = cvCreateImage(cvSize(im1.width,im1.height), IPL_DEPTH_8U, 1);
+			IplImage im2 = cvCreateImage(cvSize(im1.width(),im1.height()), IPL_DEPTH_8U, 1);
 			cvCvtColor(im1, im2, CV_BGR2GRAY);
 			
 			// Initialize histogram array
