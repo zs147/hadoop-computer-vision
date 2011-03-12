@@ -8,8 +8,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import edu.vt.io.Image;
 
-import static com.googlecode.javacv.jna.cxcore.v21.*;
-import static com.googlecode.javacv.jna.highgui.v21.*;
+import static com.googlecode.javacv.cpp.opencv_core.*;
 
 public class ImageRecordWriter extends RecordWriter<Text, Image> {
 

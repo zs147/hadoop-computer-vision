@@ -17,8 +17,10 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import static com.googlecode.javacv.jna.cxcore.v21.*;
-import static com.googlecode.javacv.jna.cv.v21.*;
+import com.googlecode.javacv.cpp.opencv_core.CvSize;
+
+import static com.googlecode.javacv.cpp.opencv_core.*;
+import static com.googlecode.javacv.cpp.opencv_imgproc.*;
 
 import edu.vt.io.Image;
 import edu.vt.io.LongArrayWritable;
@@ -36,8 +38,8 @@ public class Resize extends Configured implements Tool {
 
 			// Resize the image
 			IplImage im1 = value.getImage();
-			CvSize newSize = new CvSize((int)Math.round(0.5 * im1.width),(int)Math.round(0.5 * im1.height));
-			IplImage im2 = cvCreateImage(newSize.byValue(), im1.depth, im1.nChannels);
+			CvSize newSize = cvSize((int)Math.round(0.5 * im1.width()),(int)Math.round(0.5 * im1.height()));
+			IplImage im2 = cvCreateImage(newSize, im1.depth(), im1.nChannels());
 
 			cvResize(im1,im2,CV_INTER_LINEAR);
 
