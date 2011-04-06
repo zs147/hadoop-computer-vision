@@ -10,7 +10,7 @@ public class WindowInfo {
 	private int xOffset;
 	private int yOffset;
 	
-	public WindowInfo(int width, int height, int xOffset, int yOffset){
+	public WindowInfo(int xOffset, int yOffset, int height, int width){
 		this.width = width;
 		this.height = height;
 		this.xOffset = xOffset;

@@ -87,29 +87,44 @@ public class Image implements Writable {
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		// Read in all the data
+		// Read image information
 		int height = WritableUtils.readVInt(in);
 		int width = WritableUtils.readVInt(in);
 		int depth = WritableUtils.readVInt(in);
 		int nChannels = WritableUtils.readVInt(in);
 		int imageSize = WritableUtils.readVInt(in);
 		
+		//Read window information
+		int windowXOffest = WritableUtils.readVInt(in);
+		int windowYOffest = WritableUtils.readVInt(in);
+		int windowHeight = WritableUtils.readVInt(in);
+		int windowWidth = WritableUtils.readVInt(in);
+		window = new WindowInfo(windowXOffest, windowYOffest, windowHeight, windowWidth);
+		
+		// Read image bytes
 		byte [] bytes = new byte[imageSize];
 		in.readFully(bytes, 0, imageSize);
-		
-		// Recreate the image
+
 		image = cvCreateImage(cvSize(width, height), depth, nChannels);
 		image.imageData(new BytePointer(bytes));
 	}
 
 	@Override
 	public void write(DataOutput out) throws IOException {
+		// Write image information
 		WritableUtils.writeVInt(out, image.height());
 		WritableUtils.writeVInt(out, image.width());
 		WritableUtils.writeVInt(out, image.depth());
 		WritableUtils.writeVInt(out, image.nChannels());
 		WritableUtils.writeVInt(out, image.imageSize());
 		
+		// Write window information
+		WritableUtils.writeVInt(out, window.getXOffset());
+		WritableUtils.writeVInt(out, window.getYOffset());
+		WritableUtils.writeVInt(out, window.getHeight());
+		WritableUtils.writeVInt(out, window.getWidth());
+		
+		// Write image bytes
 		byte [] bytes = image.imageData().getStringBytes();
 		out.write(bytes, 0, image.imageSize());
 	}
