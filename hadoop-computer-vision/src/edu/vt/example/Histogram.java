@@ -84,12 +84,18 @@ public class Histogram extends Configured implements Tool {
 	}
 
 	public int run(String[] args) throws Exception {
-		Job job = new Job(getConf());
+		// Set various configuration settings
+		Configuration conf = getConf();
+		conf.setInt("mapreduce.imagerecordreader.windowsizepercent", 23);
+		conf.setInt("mapreduce.imagerecordreader.windowoverlappercent", 0);
+		
+		// Create job
+		Job job = new Job(conf);
+		
+		// Specify various job-specific parameters
 		job.setJarByClass(Histogram.class);
-
-		// Specify various job-specific parameters 
 		job.setJobName("Histogram");
-
+		
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(LongArrayWritable.class);
 
@@ -100,6 +106,7 @@ public class Histogram extends Configured implements Tool {
 		job.setInputFormatClass(ImageInputFormat.class);
 		job.setOutputFormatClass(TextOutputFormat.class);
 
+		// Set input and output paths
 		FileInputFormat.addInputPath(job, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
