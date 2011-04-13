@@ -37,13 +37,14 @@ public class Resize extends Configured implements Tool {
 				throws IOException, InterruptedException {
 
 			// Resize the image
-			IplImage im1 = value.getImage();
+			/*IplImage im1 = value.getImage();
 			CvSize newSize = cvSize((int)Math.round(0.5 * im1.width()),(int)Math.round(0.5 * im1.height()));
 			IplImage im2 = cvCreateImage(newSize, im1.depth(), im1.nChannels());
 
 			cvResize(im1,im2,CV_INTER_LINEAR);
 
-			context.write(key, new Image(im2));
+			context.write(key, new Image(im2));*/
+			context.write(key, value);
 		}
 	}
 
@@ -66,17 +67,23 @@ public class Resize extends Configured implements Tool {
 	}
 
 	public int run(String[] args) throws Exception {
-		Job job = new Job(getConf());
-		job.setJarByClass(Histogram.class);
-
+		// Set various configuration settings
+		Configuration conf = getConf();
+		conf.setInt("mapreduce.imagerecordreader.windowsizepercent", 100);
+		conf.setInt("mapreduce.imagerecordreader.windowoverlappercent", 0);
+		
+		// Create job
+		Job job = new Job(conf);
+		
 		// Specify various job-specific parameters
-		job.setJobName("Histogram");
+		job.setJarByClass(Resize.class);
+		job.setJobName("Resize");
 
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Image.class);
 
 		job.setMapperClass(Map.class);
-		job.setCombinerClass(Reduce.class);
+		//job.setCombinerClass(Reduce.class);
 		job.setReducerClass(Reduce.class);
 
 		job.setInputFormatClass(ImageInputFormat.class);
@@ -89,7 +96,7 @@ public class Resize extends Configured implements Tool {
 	}
 
 	public static void main(String[] args) throws Exception {
-		int res = ToolRunner.run(new Configuration(), new Histogram(), args);
+		int res = ToolRunner.run(new Configuration(), new Resize(), args);
 		System.exit(res);
 	}
 }

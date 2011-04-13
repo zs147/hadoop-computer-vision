@@ -25,7 +25,7 @@ public class Image implements Writable {
 	// Create Image from IplImage
 	public Image(IplImage image){
 		this.image = image;
-		this.window = null;
+		this.window = new WindowInfo();
 	}
 
 	// Create Image from IplImage and IplROI
@@ -126,6 +126,7 @@ public class Image implements Writable {
 		
 		// Write image bytes
 		byte [] bytes = image.imageData().getStringBytes();
+		int size = image.imageSize();
 		out.write(bytes, 0, image.imageSize());
 	}
 
