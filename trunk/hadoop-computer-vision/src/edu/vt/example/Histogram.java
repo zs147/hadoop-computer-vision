@@ -86,7 +86,7 @@ public class Histogram extends Configured implements Tool {
 	public int run(String[] args) throws Exception {
 		// Set various configuration settings
 		Configuration conf = getConf();
-		conf.setInt("mapreduce.imagerecordreader.windowsizepercent", 23);
+		conf.setInt("mapreduce.imagerecordreader.windowsizepercent", 25);
 		conf.setInt("mapreduce.imagerecordreader.windowoverlappercent", 0);
 		
 		// Create job
