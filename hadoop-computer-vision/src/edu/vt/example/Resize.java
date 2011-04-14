@@ -6,31 +6,25 @@ import java.util.Iterator;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.Reducer.Context;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import com.googlecode.javacv.cpp.opencv_core.CvSize;
 
 import static com.googlecode.javacv.cpp.opencv_core.*;
-import static com.googlecode.javacv.cpp.opencv_imgproc.*;
 
 import edu.vt.io.Image;
-import edu.vt.io.LongArrayWritable;
 import edu.vt.input.ImageInputFormat;
 import edu.vt.output.ImageOutputFormat;
 
 public class Resize extends Configured implements Tool {
 	public static class Map extends
 			Mapper<Text, Image, Text, Image> {
-		private final static LongWritable one = new LongWritable(1);
 
 		@Override
 		public void map(Text key, Image value, Context context)
@@ -57,19 +51,32 @@ public class Resize extends Configured implements Tool {
 
 			// Sum the parts
 			Iterator<Image> it = values.iterator();
+			Image img = null;
 			Image part = null;
-			if (it.hasNext()) {
+			while (it.hasNext()) {
 				part = (Image) it.next();
+				if(img == null){
+					int height = part.getHeight();
+					int width = part.getWidth();
+					if(part.getWindow().isValid()){
+						height = part.getWindow().getHeight();
+						width = part.getWindow().getWidth();
+					}
+					int depth = part.getDepth();
+					int nChannel = part.getNumChannel();
+					img = new Image(height, width, depth, nChannel);
+				}
+				img.insertImage(part);
 			}
 
-			context.write(key, part);
+			context.write(key, img);
 		}
 	}
 
 	public int run(String[] args) throws Exception {
 		// Set various configuration settings
 		Configuration conf = getConf();
-		conf.setInt("mapreduce.imagerecordreader.windowsizepercent", 100);
+		conf.setInt("mapreduce.imagerecordreader.windowsizepercent", 25);
 		conf.setInt("mapreduce.imagerecordreader.windowoverlappercent", 0);
 		
 		// Create job
@@ -83,7 +90,6 @@ public class Resize extends Configured implements Tool {
 		job.setOutputValueClass(Image.class);
 
 		job.setMapperClass(Map.class);
-		//job.setCombinerClass(Reduce.class);
 		job.setReducerClass(Reduce.class);
 
 		job.setInputFormatClass(ImageInputFormat.class);

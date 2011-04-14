@@ -36,13 +36,18 @@ public class ImageRecordWriter extends RecordWriter<Text, Image> {
 			InterruptedException {
 		
 		// An optional 0-terminated list of JPG parameter pairs <param id, value>
-		int jpeg_params[] = { CV_IMWRITE_JPEG_QUALITY, 80, 0 };
+		//int jpeg_params[] = { CV_IMWRITE_JPEG_QUALITY, 80, 0 };
+		
+		// Get file name and extension
+		String fileName = key.toString();
+		String ext = getFileExt(fileName);
 		
 		// Encode image into a single-row matrix of CV_8UC1
-		CvMat imageBuffer = cvEncodeImage(".jpeg", value.getImage(), jpeg_params);
+		// Use file extension to determine compression
+		CvMat imageBuffer = cvEncodeImage(ext, value.getImage());
 		
 		// Create output file
-		Path filePath = new Path(outputPath, "test.jpg");
+		Path filePath = new Path(outputPath, fileName);
 		FSDataOutputStream fileStream = fs.create(filePath, false);
 		
 		// Write the image to file
@@ -53,6 +58,15 @@ public class ImageRecordWriter extends RecordWriter<Text, Image> {
 		
 		// Close the file stream
 		fileStream.close();
+	}
+	
+	public String getFileExt(String fileName){
+		int idx = fileName.lastIndexOf('.');
+		if(idx == -1){
+			return null;
+		}
+		
+		return fileName.substring(idx,fileName.length());
 	}
 
 }

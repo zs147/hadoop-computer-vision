@@ -96,7 +96,7 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 		image = new Image(cvDecodeImage(cvMat(1, b.length, CV_8UC1, new BytePointer(b)))); 
 		
 		// Get filename to use as key
-		fileName = split.getPath().toString();
+		fileName = split.getPath().getName().toString();
 		
 		// Calculate the number of splits
 		CalculateTotalSplits();
