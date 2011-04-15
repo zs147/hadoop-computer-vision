@@ -17,12 +17,13 @@ import org.apache.hadoop.util.ToolRunner;
 
 
 import static com.googlecode.javacv.cpp.opencv_core.*;
+import static com.googlecode.javacv.cpp.opencv_imgproc.*;
 
 import edu.vt.io.Image;
 import edu.vt.input.ImageInputFormat;
 import edu.vt.output.ImageOutputFormat;
 
-public class Resize extends Configured implements Tool {
+public class CannyTest extends Configured implements Tool {
 	public static class Map extends
 			Mapper<Text, Image, Text, Image> {
 
@@ -30,14 +31,15 @@ public class Resize extends Configured implements Tool {
 		public void map(Text key, Image value, Context context)
 				throws IOException, InterruptedException {
 
-			// Resize the image
-			/*IplImage im1 = value.getImage();
-			CvSize newSize = cvSize((int)Math.round(0.5 * im1.width()),(int)Math.round(0.5 * im1.height()));
-			IplImage im2 = cvCreateImage(newSize, im1.depth(), im1.nChannels());
+			int N = 7;
+			int aperature_size = N;
+			double lowThresh = 100;
+			double highThresh = 400;
 
-			cvResize(im1,im2,CV_INTER_LINEAR);
-
-			context.write(key, new Image(im2));*/
+			IplImage img = value.getImage();
+			
+			cvCanny( img, img, lowThresh*N*N, highThresh*N*N, aperature_size );
+			
 			context.write(key, value);
 		}
 	}
@@ -78,13 +80,14 @@ public class Resize extends Configured implements Tool {
 		Configuration conf = getConf();
 		conf.setInt("mapreduce.imagerecordreader.windowsizepercent", 25);
 		conf.setInt("mapreduce.imagerecordreader.windowoverlappercent", 0);
+		conf.setInt("mapreduce.imagerecordreader.iscolor", 0);
 		
 		// Create job
 		Job job = new Job(conf);
 		
 		// Specify various job-specific parameters
-		job.setJarByClass(Resize.class);
-		job.setJobName("Resize");
+		job.setJarByClass(CannyTest.class);
+		job.setJobName("CannyTest");
 
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Image.class);
@@ -102,7 +105,7 @@ public class Resize extends Configured implements Tool {
 	}
 
 	public static void main(String[] args) throws Exception {
-		int res = ToolRunner.run(new Configuration(), new Resize(), args);
+		int res = ToolRunner.run(new Configuration(), new CannyTest(), args);
 		System.exit(res);
 	}
 }

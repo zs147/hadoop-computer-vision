@@ -44,6 +44,7 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 	int sizePercent = 0;
 	int overlapPixel = 0;
 	int sizePixel = 0;
+	int iscolor = -1;
 	
 	// splits based on configuration parameters
 	int totalXSplits = 0;
@@ -93,7 +94,7 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 		// Read file and decode image
 		byte [] b = new byte[fileIn.available()];
 		fileIn.readFully(b);
-		image = new Image(cvDecodeImage(cvMat(1, b.length, CV_8UC1, new BytePointer(b)))); 
+		image = new Image(cvDecodeImage(cvMat(1, b.length, CV_8UC1, new BytePointer(b)),iscolor)); 
 		
 		// Get filename to use as key
 		fileName = split.getPath().getName().toString();
@@ -165,6 +166,8 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 		if(sizePixel < 0){
 			sizePixel = 0;
 		}
+		
+		iscolor = conf.getInt("mapreduce.imagerecordreader.iscolor", -1);
 		
 		byPixel = conf.getBoolean("mapreduce.imagerecordreader.windowbypixel", false);
 	}
