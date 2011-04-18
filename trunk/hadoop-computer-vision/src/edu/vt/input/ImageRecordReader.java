@@ -38,10 +38,9 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 	// Configuration parameters
 	// By default use percentage for splitting
 	boolean byPixel = false;
-	int overlapPercent = 0;
 	int sizePercent = 0;
-	int overlapPixel = 0;
 	int sizePixel = 0;
+	int borderPixel = 0;
 	int iscolor = -1;
 	
 	// splits based on configuration parameters
@@ -131,7 +130,7 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 		cvSetImageROI(img1, window);
 		 
 		// create destination image 
-		IplImage img2 = cvCreateImage(cvGetSize(img1), img1.depth(), img1.nChannels());
+		IplImage img2 = cvCreateImage(cvSize(window.width(), window.height()), img1.depth(), img1.nChannels());
 		 
 		// copy sub-image
 		cvCopy(img1, img2, null);
@@ -143,22 +142,16 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 	}
 	
 	private void getConfig(Configuration conf){
-		// Ensure that percentage is between 0 and 100
-		overlapPercent = conf.getInt("mapreduce.imagerecordreader.windowoverlappercent", 0);
-		if(overlapPercent < 0 || overlapPercent > 100){
-			overlapPercent = 0;
+		// Ensure that value is not negative
+		borderPixel = conf.getInt("mapreduce.imagerecordreader.borderPixel", 0);
+		if(borderPixel < 0){
+			borderPixel = 0;
 		}
 		
 		// Ensure that percentage is between 0 and 100
 		sizePercent = conf.getInt("mapreduce.imagerecordreader.windowsizepercent", 100);
 		if(sizePercent < 0 || sizePercent > 100){
 			sizePercent = 100;
-		}
-		
-		// Ensure that value is not negative
-		overlapPixel = conf.getInt("mapreduce.imagerecordreader.windowoverlappixel", 0);
-		if(overlapPixel < 0){
-			overlapPixel = 0;
 		}
 		
 		// Ensure that value is not negative
@@ -173,10 +166,23 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 	}
 	
 	private CvRect getWindow(){
+		// Get current window
 		int x = currentSplit % totalXSplits;
 		int y = currentSplit / totalYSplits;
 		
-		return cvRect(x * xSplitPixels, y * ySplitPixels, xSplitPixels, ySplitPixels);
+		int width = xSplitPixels;
+		int height = ySplitPixels;
+		
+		// Deal with partial windows
+		if(x * xSplitPixels + width > image.getWidth()){
+			width = image.getWidth() - x * xSplitPixels; 
+		}
+		if(y * ySplitPixels + height > image.getHeight()){
+			height = image.getHeight() - y * ySplitPixels;
+		}
+		
+		// Return rect representing window
+		return cvRect(x * xSplitPixels, y * ySplitPixels, width, height);
 	}
 	
 	private void calculateSplitInfo(){
@@ -187,9 +193,9 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 			totalYSplits = (int)Math.ceil(image.getHeight() / Math.min(ySplitPixels, image.getHeight()));
 		}else{
 			xSplitPixels = (int)(image.getWidth() * (sizePercent / 100.0));
-			ySplitPixels = (int)(image.getWidth() * (sizePercent / 100.0));
-			totalXSplits = (int)Math.ceil(image.getWidth() / Math.min(xSplitPixels, image.getWidth()));
-			totalYSplits = (int)Math.ceil(image.getHeight() / Math.min(ySplitPixels, image.getHeight()));
+			ySplitPixels = (int)(image.getHeight() * (sizePercent / 100.0));
+			totalXSplits = (int)Math.ceil(image.getWidth() / (double)Math.min(xSplitPixels, image.getWidth()));
+			totalYSplits = (int)Math.ceil(image.getHeight() / (double)Math.min(ySplitPixels, image.getHeight()));
 		}
 	}
 }

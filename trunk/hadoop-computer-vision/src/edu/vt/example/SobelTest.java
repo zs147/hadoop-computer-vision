@@ -76,8 +76,8 @@ public class SobelTest extends Configured implements Tool {
 	public int run(String[] args) throws Exception {
 		// Set various configuration settings
 		Configuration conf = getConf();
-		conf.setInt("mapreduce.imagerecordreader.windowsizepercent", 25);
-		conf.setInt("mapreduce.imagerecordreader.windowoverlappercent", 0);
+		conf.setInt("mapreduce.imagerecordreader.windowsizepercent", 100);
+		conf.setInt("mapreduce.imagerecordreader.borderPixel", 0);
 		conf.setInt("mapreduce.imagerecordreader.iscolor", 0);
 		
 		// Create job
