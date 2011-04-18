@@ -26,8 +26,6 @@ import static com.googlecode.javacv.cpp.opencv_highgui.*;
 public class ImageRecordReader extends RecordReader<Text, Image> {
 
 	private static final Log LOG = LogFactory.getLog(ImageRecordReader.class);
-
-	private float status;
 	
 	// Image information
 	private String fileName = null;
@@ -49,6 +47,8 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 	// splits based on configuration parameters
 	int totalXSplits = 0;
 	int totalYSplits = 0;
+	int xSplitPixels = 0;
+	int ySplitPixels = 0;
 	
 	// Current split
 	int currentSplit = 0;
@@ -100,7 +100,7 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 		fileName = split.getPath().getName().toString();
 		
 		// Calculate the number of splits
-		CalculateTotalSplits();
+		calculateSplitInfo();
 		currentSplit = 0;
 	}
 
@@ -173,33 +173,23 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 	}
 	
 	private CvRect getWindow(){
-		if(byPixel){
-			return getWindowByPixel();
-		}else{
-			return getWindowByPct();
-		}
-	}
-	
-	private void CalculateTotalSplits(){
-		if(byPixel){
-			totalXSplits = (int)Math.ceil(image.getWidth() / Math.min(sizePixel, image.getWidth()));
-			totalYSplits = (int)Math.ceil(image.getHeight() / Math.min(sizePixel, image.getHeight()));
-		}else{
-			totalXSplits = totalYSplits = (int)Math.ceil(100.0 / sizePercent);
-		}
-	}
-	
-	private CvRect getWindowByPct(){
 		int x = currentSplit % totalXSplits;
 		int y = currentSplit / totalYSplits;
 		
-		int width = (int) Math.ceil(image.getWidth() * (sizePercent / 100.0));
-		int height = (int) Math.ceil(image.getHeight() * (sizePercent / 100.0));
-		
-		return cvRect(x * width, y * height, width, height);
+		return cvRect(x * xSplitPixels, y * ySplitPixels, xSplitPixels, ySplitPixels);
 	}
 	
-	private CvRect getWindowByPixel(){
-		return cvRect(0,0,1,1);
+	private void calculateSplitInfo(){
+		if(byPixel){
+			xSplitPixels = sizePixel;
+			ySplitPixels = sizePixel;
+			totalXSplits = (int)Math.ceil(image.getWidth() / Math.min(xSplitPixels, image.getWidth()));
+			totalYSplits = (int)Math.ceil(image.getHeight() / Math.min(ySplitPixels, image.getHeight()));
+		}else{
+			xSplitPixels = (int)(image.getWidth() * (sizePercent / 100.0));
+			ySplitPixels = (int)(image.getWidth() * (sizePercent / 100.0));
+			totalXSplits = (int)Math.ceil(image.getWidth() / Math.min(xSplitPixels, image.getWidth()));
+			totalYSplits = (int)Math.ceil(image.getHeight() / Math.min(ySplitPixels, image.getHeight()));
+		}
 	}
 }
