@@ -123,14 +123,15 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 	}
 	
 	private Image getSubWindow(){
-		CvRect window = getWindow();
+		WindowInfo window = createWindow();
+		CvRect roi = window.computeROI();
 		 
 		// sets the ROI
 		IplImage img1 = image.getImage();
-		cvSetImageROI(img1, window);
+		cvSetImageROI(img1, roi);
 		 
 		// create destination image 
-		IplImage img2 = cvCreateImage(cvSize(window.width(), window.height()), img1.depth(), img1.nChannels());
+		IplImage img2 = cvCreateImage(cvSize(roi.width(), roi.height()), img1.depth(), img1.nChannels());
 		 
 		// copy sub-image
 		cvCopy(img1, img2, null);
@@ -138,7 +139,7 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 		// reset the ROI
 		cvResetImageROI(img1);
 		
-		return new Image(img2, new WindowInfo(window.x(), window.y(), img1.height(), img1.width()));
+		return new Image(img2, window);
 	}
 	
 	private void getConfig(Configuration conf){
@@ -165,7 +166,9 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 		byPixel = conf.getBoolean("mapreduce.imagerecordreader.windowbypixel", false);
 	}
 	
-	private CvRect getWindow(){
+	private WindowInfo createWindow(){
+		WindowInfo window = new WindowInfo();
+		
 		// Get current window
 		int x = currentSplit % totalXSplits;
 		int y = currentSplit / totalYSplits;
@@ -181,8 +184,30 @@ public class ImageRecordReader extends RecordReader<Text, Image> {
 			height = image.getHeight() - y * ySplitPixels;
 		}
 		
-		// Return rect representing window
-		return cvRect(x * xSplitPixels, y * ySplitPixels, width, height);
+		window.setParentInfo(x * xSplitPixels, y * ySplitPixels, image.getHeight(), image.getWidth());
+		window.setWindowSize(height, width);
+		
+		// Calculate borders
+		int top = 0;
+		int bottom = 0;
+		int left = 0;
+		int right = 0;
+		
+		if(window.getParentXOffset() > borderPixel){
+			left = borderPixel;
+		}
+		if(window.getParentYOffset() > borderPixel){
+			top = borderPixel;
+		}
+		if(window.getParentXOffset() + borderPixel + window.getWidth() < window.getParentWidth()){
+			right = borderPixel;
+		}
+		if(window.getParentYOffset() + borderPixel + window.getHeight() < window.getParentHeight()){
+			bottom = borderPixel;
+		}
+		
+		window.setBorder(top, bottom, left, right);
+		return window;
 	}
 	
 	private void calculateSplitInfo(){
