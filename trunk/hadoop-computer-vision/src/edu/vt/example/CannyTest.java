@@ -60,9 +60,9 @@ public class CannyTest extends Configured implements Tool {
 				if(img == null){
 					int height = part.getHeight();
 					int width = part.getWidth();
-					if(part.getWindow().isValid()){
-						height = part.getWindow().getHeight();
-						width = part.getWindow().getWidth();
+					if(part.getWindow().isParentInfoValid()){
+						height = part.getWindow().getParentHeight();
+						width = part.getWindow().getParentWidth();
 					}
 					int depth = part.getDepth();
 					int nChannel = part.getNumChannel();

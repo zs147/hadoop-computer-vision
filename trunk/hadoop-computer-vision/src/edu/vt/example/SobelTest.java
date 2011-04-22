@@ -58,9 +58,9 @@ public class SobelTest extends Configured implements Tool {
 				if(img == null){
 					int height = part.getHeight();
 					int width = part.getWidth();
-					if(part.getWindow().isValid()){
-						height = part.getWindow().getHeight();
-						width = part.getWindow().getWidth();
+					if(part.getWindow().isParentInfoValid()){
+						height = part.getWindow().getParentHeight();
+						width = part.getWindow().getParentWidth();
 					}
 					int depth = part.getDepth();
 					int nChannel = part.getNumChannel();
@@ -76,7 +76,7 @@ public class SobelTest extends Configured implements Tool {
 	public int run(String[] args) throws Exception {
 		// Set various configuration settings
 		Configuration conf = getConf();
-		conf.setInt("mapreduce.imagerecordreader.windowsizepercent", 100);
+		conf.setInt("mapreduce.imagerecordreader.windowsizepercent", 25);
 		conf.setInt("mapreduce.imagerecordreader.borderPixel", 0);
 		conf.setInt("mapreduce.imagerecordreader.iscolor", 0);
 		

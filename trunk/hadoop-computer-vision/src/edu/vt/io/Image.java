@@ -99,9 +99,17 @@ public class Image implements Writable {
 		IplImage img2 = sourceImage.getImage();
 		WindowInfo win = sourceImage.getWindow();
 		
-		// set the ROI (location to copy into)
-		if(win.isValid()){
-			cvSetImageROI(img1, cvRect(win.getXOffset(), win.getYOffset(),sourceImage.getWidth(), sourceImage.getHeight()));
+		// set the ROI on destination image
+		if(win.isParentInfoValid()){
+			cvSetImageROI(img1, cvRect(win.getParentXOffset(), win.getParentYOffset(),win.getWidth(), win.getHeight()));
+		}
+		// set the ROI on source image
+		if(win.isBorderValid()){
+			int x = win.getBorderLeft();
+			int y = win.getBorderTop();
+			int width = img2.width() - win.getBorderRight() - win.getBorderLeft();
+			int height = img2.height() - win.getBorderTop() - win.getBorderRight();
+			cvSetImageROI(img2, cvRect(x,y, width, height));
 		}
 		
 		// copy sub-image
@@ -125,8 +133,19 @@ public class Image implements Writable {
 		int windowYOffest = WritableUtils.readVInt(in);
 		int windowHeight = WritableUtils.readVInt(in);
 		int windowWidth = WritableUtils.readVInt(in);
-		window = new WindowInfo(windowXOffest, windowYOffest, windowHeight,
-				windowWidth);
+		
+		int top = WritableUtils.readVInt(in);
+		int bottom = WritableUtils.readVInt(in);
+		int left = WritableUtils.readVInt(in);
+		int right = WritableUtils.readVInt(in);
+		
+		int h = WritableUtils.readVInt(in);
+		int w = WritableUtils.readVInt(in);
+		
+		window = new WindowInfo();
+		window.setParentInfo(windowXOffest, windowYOffest, windowHeight,windowWidth);
+		window.setBorder(top, bottom, left, right);
+		window.setWindowSize(h, w);
 
 		// Read image bytes
 		byte[] bytes = new byte[imageSize];
@@ -146,8 +165,16 @@ public class Image implements Writable {
 		WritableUtils.writeVInt(out, image.imageSize());
 
 		// Write window information
-		WritableUtils.writeVInt(out, window.getXOffset());
-		WritableUtils.writeVInt(out, window.getYOffset());
+		WritableUtils.writeVInt(out, window.getParentXOffset());
+		WritableUtils.writeVInt(out, window.getParentYOffset());
+		WritableUtils.writeVInt(out, window.getParentHeight());
+		WritableUtils.writeVInt(out, window.getParentWidth());
+		
+		WritableUtils.writeVInt(out, window.getBorderTop());
+		WritableUtils.writeVInt(out, window.getBorderBottom());
+		WritableUtils.writeVInt(out, window.getBorderLeft());
+		WritableUtils.writeVInt(out, window.getBorderRight());
+		
 		WritableUtils.writeVInt(out, window.getHeight());
 		WritableUtils.writeVInt(out, window.getWidth());
 
