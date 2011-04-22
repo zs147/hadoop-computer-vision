@@ -105,11 +105,7 @@ public class Image implements Writable {
 		}
 		// set the ROI on source image
 		if(win.isBorderValid()){
-			int x = win.getBorderLeft();
-			int y = win.getBorderTop();
-			int width = img2.width() - win.getBorderRight() - win.getBorderLeft();
-			int height = img2.height() - win.getBorderTop() - win.getBorderRight();
-			cvSetImageROI(img2, cvRect(x,y, width, height));
+			cvSetImageROI(img2, cvRect(win.getBorderLeft(), win.getBorderTop(), win.getWidth(), win.getWidth()));
 		}
 		
 		// copy sub-image
