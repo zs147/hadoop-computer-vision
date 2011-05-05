@@ -1,5 +1,8 @@
 package edu.vt.example;
 
+import static com.googlecode.javacv.cpp.opencv_core.*;
+import static com.googlecode.javacv.cpp.opencv_imgproc.*;
+
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -15,65 +18,26 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import static com.googlecode.javacv.cpp.opencv_core.*;
-import static com.googlecode.javacv.cpp.opencv_objdetect.*;
+import com.googlecode.javacv.cpp.opencv_core.IplImage;
 
 import edu.vt.input.ImageInputFormat;
 import edu.vt.io.Image;
 import edu.vt.output.ImageOutputFormat;
 
-public class FaceDetect extends Configured implements Tool {
+public class EqualizeHist extends Configured implements Tool {
 	public static class Map extends Mapper<Text, Image, Text, Image> {
-
-		// Create memory for calculations
-		CvMemStorage storage = null;
-
-		// Create a new Haar classifier
-		CvHaarClassifierCascade classifier = null;
-
-		// List of classifiers
-		String[] classifierName = {
-				"classifiers/haarcascade_frontalface_alt.xml",
-				"classifiers/haarcascade_frontalface_alt2.xml",
-				"classifiers/haarcascade_profileface.xml" };
-
-		@Override
-		protected void setup(Context context) {
-			// Allocate the memory storage
-			storage = CvMemStorage.create();
-			
-			// Load the HaarClassifierCascade
-			classifier = new CvHaarClassifierCascade(cvLoad(classifierName[0]));
-			
-			// Make sure the cascade is loaded
-			if (classifier.isNull()) {
-				System.err.println("Error loading classifier file");
-			}
-		}
 
 		@Override
 		public void map(Text key, Image value, Context context)
 				throws IOException, InterruptedException {
 
-			// Clear the memory storage which was used before
-			cvClearMemStorage(storage);
+			IplImage src = value.getImage();
+			IplImage dest = cvCreateImage(cvSize(src.width(), src.height()),
+					src.depth(), src.nChannels());
 
-			if(!classifier.isNull()){
-				// Detect the objects and store them in the sequence
-				CvSeq faces = cvHaarDetectObjects(value.getImage(), classifier,
-						storage, 1.1, 3, CV_HAAR_DO_CANNY_PRUNING);
-				
-				// Loop the number of faces found.  Draw red box around face.
-				int total = faces.total();
-				for (int i = 0; i < total; i++) {
-					CvRect r = new CvRect(cvGetSeqElem(faces, i));
-					int x = r.x(), y = r.y(), w = r.width(), h = r.height();
-					cvRectangle(value.getImage(), cvPoint(x, y),
-							cvPoint(x + w, y + h), CvScalar.RED, 1, CV_AA, 0);
-				}
-			}
+			cvEqualizeHist( src, dest );
 
-			context.write(key, value);
+			context.write(key, new Image(dest,value.getWindow()));
 		}
 	}
 
@@ -83,11 +47,27 @@ public class FaceDetect extends Configured implements Tool {
 		public void reduce(Text key, Iterable<Image> values, Context context)
 				throws IOException, InterruptedException {
 
-			// Do nothing
+			// Sum the parts
 			Iterator<Image> it = values.iterator();
+			Image img = null;
+			Image part = null;
 			while (it.hasNext()) {
-				context.write(key, it.next());
+				part = (Image) it.next();
+				if (img == null) {
+					int height = part.getHeight();
+					int width = part.getWidth();
+					if (part.getWindow().isParentInfoValid()) {
+						height = part.getWindow().getParentHeight();
+						width = part.getWindow().getParentWidth();
+					}
+					int depth = part.getDepth();
+					int nChannel = part.getNumChannel();
+					img = new Image(height, width, depth, nChannel);
+				}
+				img.insertImage(part);
 			}
+
+			context.write(key, img);
 		}
 	}
 
@@ -96,14 +76,14 @@ public class FaceDetect extends Configured implements Tool {
 		Configuration conf = getConf();
 		conf.setInt("mapreduce.imagerecordreader.windowsizepercent", 100);
 		conf.setInt("mapreduce.imagerecordreader.borderPixel", 0);
-		conf.setInt("mapreduce.imagerecordreader.iscolor", 1);
+		conf.setInt("mapreduce.imagerecordreader.iscolor", 0);
 
 		// Create job
 		Job job = new Job(conf);
 
 		// Specify various job-specific parameters
-		job.setJarByClass(FaceDetect.class);
-		job.setJobName("FaceDetect");
+		job.setJarByClass(EqualizeHist.class);
+		job.setJobName("EqualizeHist");
 
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Image.class);
@@ -121,10 +101,7 @@ public class FaceDetect extends Configured implements Tool {
 	}
 
 	public static void main(String[] args) throws Exception {
-		long t = cvGetTickCount();
-		int res = ToolRunner.run(new Configuration(), new FaceDetect(), args);
-		t = cvGetTickCount() - t;
-		System.out.println("Time: " + (t/cvGetTickFrequency()/1000000) + "sec");
+		int res = ToolRunner.run(new Configuration(), new EqualizeHist(), args);
 		System.exit(res);
 	}
 }
