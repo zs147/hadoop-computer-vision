@@ -121,7 +121,10 @@ public class FaceDetect2  extends Configured implements Tool {
 	}
 
 	public static void main(String[] args) throws Exception {
+		long t = cvGetTickCount();
 		int res = ToolRunner.run(new Configuration(), new FaceDetect2(), args);
+		t = cvGetTickCount() - t;
+		System.out.println("Time: " + (t/cvGetTickFrequency()/1000000) + "sec");
 		System.exit(res);
 	}
 }
