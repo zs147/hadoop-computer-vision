@@ -33,9 +33,9 @@ public class FaceDetect extends Configured implements Tool {
 
 		// List of classifiers
 		String[] classifierName = {
-				"classifiers/haarcascade_frontalface_alt.xml",
-				"classifiers/haarcascade_frontalface_alt2.xml",
-				"classifiers/haarcascade_profileface.xml" };
+				"/home/efrohnho/workspace/hadoop-computer-vision/classifiers/haarcascade_frontalface_alt.xml",
+				"/home/efrohnho/workspace/hadoop-computer-vision/classifiers/haarcascade_frontalface_alt2.xml",
+				"/home/efrohnho/workspace/hadoop-computer-vision/classifiers/haarcascade_profileface.xml" };
 
 		@Override
 		protected void setup(Context context) {

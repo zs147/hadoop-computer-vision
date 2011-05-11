@@ -1,10 +1,10 @@
 Running Hadoop: 
 =============== 
 
-../hadoop-0.21.0/bin/hadoop fs -put input input
-../hadoop-0.21.0/bin/hadoop fs -rmr output
-../hadoop-0.21.0/bin/hadoop jar hadoop-computer-vision.jar edu.vt.example.Histogram input output
-
+../bin/hadoop fs -put input input
+../bin/hadoop fs -rmr output
+../bin/hadoop jar hadoop-computer-vision.jar edu.vt.example.Histogram input output
+../bin/hadoop fs -get output output
 
 
 
